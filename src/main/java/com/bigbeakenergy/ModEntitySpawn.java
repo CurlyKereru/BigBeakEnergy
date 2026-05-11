@@ -15,7 +15,7 @@ public class ModEntitySpawn {
                 BiomeSelectors.tag(ModBiomeTags.Biomes.SPAWNS_CASSOWARY),
                 MobCategory.CREATURE,
                 ModEntities.CASSOWARY,
-                8,  // weight
+                6,  // weight
                 1,  // min group size
                 1   // max group size
         );

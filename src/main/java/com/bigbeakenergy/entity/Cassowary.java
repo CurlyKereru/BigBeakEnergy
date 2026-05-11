@@ -3,13 +3,17 @@ package com.bigbeakenergy.entity;
 import com.bigbeakenergy.ModBlocksRegistry;
 import com.bigbeakenergy.ModItemsRegistry;
 import com.bigbeakenergy.block.CassowaryEggBlock;
+import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.stats.Stats;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.TimeUtil;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.DifficultyInstance;
@@ -32,11 +36,13 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 
-import java.util.Objects;
 
 public class Cassowary extends Animal implements NeutralMob {
 
@@ -53,7 +59,7 @@ public class Cassowary extends Animal implements NeutralMob {
 
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+    protected void defineSynchedData(SynchedEntityData.@NonNull Builder builder) {
         super.defineSynchedData(builder);
         builder.define(HAS_EGG, false);
         builder.define(LAYING_EGG, false);
@@ -77,13 +83,13 @@ public class Cassowary extends Animal implements NeutralMob {
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput output) {
+    protected void addAdditionalSaveData(@NonNull ValueOutput output) {
         super.addAdditionalSaveData(output);
         output.putBoolean("has_egg", this.hasEgg());
     }
 
     @Override
-    protected void readAdditionalSaveData(ValueInput input) {
+    protected void readAdditionalSaveData(@NonNull ValueInput input) {
         super.readAdditionalSaveData(input);
         this.setHasEgg(input.getBooleanOr("has_egg", false));
     }
@@ -140,14 +146,14 @@ public class Cassowary extends Animal implements NeutralMob {
     // Offspring
 
     @Override
-    public @Nullable Cassowary getBreedOffspring(ServerLevel level, AgeableMob partner) {
+    public @Nullable Cassowary getBreedOffspring(@NonNull ServerLevel level, @NonNull AgeableMob partner) {
         return ModEntities.CASSOWARY.create(level, EntitySpawnReason.BREEDING);
     }
     // Spawn
 
     @Override
-    public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
-                                        EntitySpawnReason reason, @Nullable SpawnGroupData spawnData) {
+    public SpawnGroupData finalizeSpawn(@NonNull ServerLevelAccessor level, @NonNull DifficultyInstance difficulty,
+                                        @NonNull EntitySpawnReason reason, @Nullable SpawnGroupData spawnData) {
         spawnData = super.finalizeSpawn(level, difficulty, reason, spawnData);
         int chicks = (reason == EntitySpawnReason.NATURAL || reason == EntitySpawnReason.CHUNK_GENERATION)
                 && random.nextInt(3) == 0 ? random.nextInt(3) + 1 : 0;
@@ -165,7 +171,7 @@ public class Cassowary extends Animal implements NeutralMob {
     // Loot (Replace with loot table?)
 
     @Override
-    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean recentlyHit) {
+    protected void dropCustomDeathLoot(@NonNull ServerLevel level, @NonNull DamageSource source, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, source, recentlyHit);
         int feathers = random.nextInt(4);
         if (feathers > 0) {
@@ -186,7 +192,7 @@ public class Cassowary extends Animal implements NeutralMob {
     // Inner goal classes
 
 
-    private class CassowaryBreedGoal extends BreedGoal {
+    private static class CassowaryBreedGoal extends BreedGoal {
         private final Cassowary cassowary;
 
         CassowaryBreedGoal(Cassowary cassowary, double speedModifier) {
@@ -201,11 +207,25 @@ public class Cassowary extends Animal implements NeutralMob {
 
         @Override
         protected void breed() {
+            ServerPlayer loveCause = null;
+            Player rawCause = this.cassowary.getLoveCause();
+            if (rawCause == null && this.partner != null) rawCause = this.partner.getLoveCause();
+            if (rawCause instanceof ServerPlayer sp) loveCause = sp;
+
+            if (loveCause != null && this.partner != null) {
+                loveCause.awardStat(Stats.ANIMALS_BRED);
+                CriteriaTriggers.BRED_ANIMALS.trigger(loveCause, this.cassowary, this.partner, null);
+            }
+
             this.cassowary.setHasEgg(true);
             this.animal.setAge(6000);
             this.partner.setAge(6000);
             this.animal.resetLove();
             this.partner.resetLove();
+            RandomSource random = this.animal.getRandom();
+            if (getServerLevel(this.level).getGameRules().get(GameRules.MOB_DROPS)) {
+                this.level.addFreshEntity(new ExperienceOrb(this.level, this.animal.getX(), this.animal.getY(), this.animal.getZ(), random.nextInt(7) + 1));
+            }
         }
     }
 
@@ -264,7 +284,7 @@ public class Cassowary extends Animal implements NeutralMob {
         }
 
         @Override
-        protected boolean isValidTarget(LevelReader level, BlockPos pos) {
+        protected boolean isValidTarget(LevelReader level, @NonNull BlockPos pos) {
             return level.getBlockState(pos).is(Blocks.GRASS_BLOCK)
                     && level.isEmptyBlock(pos.above());
         }
@@ -288,27 +308,48 @@ public class Cassowary extends Animal implements NeutralMob {
 
     private class CassowaryAttackPlayersGoal extends NearestAttackableTargetGoal<Player> {
         public CassowaryAttackPlayersGoal() {
-            Objects.requireNonNull(Cassowary.this);
             super(Cassowary.this, Player.class, 20, true, true, null);
         }
+
+        private int checkCooldown = 0;
+        private boolean cachedResult = false;
 
         @Override
         public boolean canUse() {
             if (Cassowary.this.isBaby()) return false;
-            if (super.canUse()) {
-                for (Cassowary chick : Cassowary.this.level().getEntitiesOfClass(
-                        Cassowary.class,
-                        Cassowary.this.getBoundingBox().inflate(8.0, 4.0, 8.0))) {
-                    if (chick.isBaby()) return true;
+
+            if (checkCooldown > 0) {
+                checkCooldown--;
+                return cachedResult && super.canUse();
+            }
+
+            checkCooldown = 10; // recheck once per half second?
+
+            if (!super.canUse()) {
+                cachedResult = false;
+                return false;
+            }
+
+            AABB searchBox = Cassowary.this.getBoundingBox().inflate(8.0, 4.0, 8.0);
+
+            for (Cassowary chick : Cassowary.this.level().getEntitiesOfClass(Cassowary.class, searchBox)) {
+                if (chick.isBaby()) { cachedResult = true; return true; }
+            }
+
+            BlockPos pos = Cassowary.this.blockPosition();
+            for (BlockPos checkPos : BlockPos.betweenClosed(pos.offset(-8, -4, -8), pos.offset(8, 4, 8))) {
+                if (Cassowary.this.level().getBlockState(checkPos).is(ModBlocksRegistry.CASSOWARY_EGG)) {
+                    cachedResult = true; return true;
                 }
             }
+
+            cachedResult = false;
             return false;
         }
     }
 
     private class CassowaryHurtByTargetGoal extends HurtByTargetGoal {
         public CassowaryHurtByTargetGoal() {
-            Objects.requireNonNull(Cassowary.this);
             super(Cassowary.this);
         }
 
@@ -322,7 +363,7 @@ public class Cassowary extends Animal implements NeutralMob {
         }
 
         @Override
-        protected void alertOther(Mob other, LivingEntity hurtByMob) {
+        protected void alertOther(@NonNull Mob other, @NonNull LivingEntity hurtByMob) {
             if (other instanceof Cassowary && !other.isBaby()) {
                 super.alertOther(other, hurtByMob);
             }
