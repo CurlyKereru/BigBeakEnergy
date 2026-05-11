@@ -30,20 +30,18 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 public class CassowaryEggBlock extends Block {
     public static final MapCodec<CassowaryEggBlock> CODEC = simpleCodec(CassowaryEggBlock::new);
     public static final IntegerProperty HATCH = BlockStateProperties.HATCH;
     public static final IntegerProperty EGGS = BlockStateProperties.EGGS;
-    public static final int MAX_HATCH_LEVEL = 2;
-    public static final int MIN_EGGS = 1;
-    public static final int MAX_EGGS = 4;
     private static final VoxelShape SHAPE_SINGLE = Block.box(3.0, 0.0, 3.0, 12.0, 7.0, 12.0);
     private static final VoxelShape SHAPE_MULTIPLE = Block.column(14.0, 0.0, 7.0);
 
     @Override
-    public MapCodec<CassowaryEggBlock> codec() {
+    public @NonNull MapCodec<CassowaryEggBlock> codec() {
         return CODEC;
     }
 
@@ -53,7 +51,7 @@ public class CassowaryEggBlock extends Block {
     }
 
     @Override
-    public void stepOn(final Level level, final BlockPos pos, final BlockState onState, final Entity entity) {
+    public void stepOn(final @NonNull Level level, final @NonNull BlockPos pos, final @NonNull BlockState onState, final Entity entity) {
         if (!entity.isSteppingCarefully()) {
             this.destroyEgg(level, onState, pos, entity, 100);
         }
@@ -62,7 +60,7 @@ public class CassowaryEggBlock extends Block {
     }
 
     @Override
-    public void fallOn(final Level level, final BlockState state, final BlockPos pos, final Entity entity, final double fallDistance) {
+    public void fallOn(final @NonNull Level level, final @NonNull BlockState state, final @NonNull BlockPos pos, final @NonNull Entity entity, final double fallDistance) {
         if (!(entity instanceof Zombie)) {
             this.destroyEgg(level, state, pos, entity, 3);
         }
@@ -81,7 +79,7 @@ public class CassowaryEggBlock extends Block {
 
     private void decreaseEggs(final Level level, final BlockPos pos, final BlockState state) {
         level.playSound(null, pos, SoundEvents.TURTLE_EGG_BREAK, SoundSource.BLOCKS, 0.7F, 0.9F + level.getRandom().nextFloat() * 0.2F);
-        int numberOfEggs = (Integer)state.getValue(EGGS);
+        int numberOfEggs = state.getValue(EGGS);
         if (numberOfEggs <= 1) {
             level.destroyBlock(pos, false);
         } else {
@@ -92,7 +90,7 @@ public class CassowaryEggBlock extends Block {
     }
 
     @Override
-    protected void randomTick(final BlockState state, final ServerLevel level, final BlockPos pos, final RandomSource random) {
+    protected void randomTick(final BlockState state, final @NonNull ServerLevel level, final @NonNull BlockPos pos, final @NonNull RandomSource random) {
 
         int hatch = state.getValue(HATCH);
 
@@ -134,26 +132,26 @@ public class CassowaryEggBlock extends Block {
 
     @Override
     public void playerDestroy(
-            final Level level, final Player player, final BlockPos pos, final BlockState state, @Nullable final BlockEntity blockEntity, final ItemStack destroyedWith
+            final @NonNull Level level, final @NonNull Player player, final @NonNull BlockPos pos, final @NonNull BlockState state, @Nullable final BlockEntity blockEntity, final @NonNull ItemStack destroyedWith
     ) {
         super.playerDestroy(level, player, pos, state, blockEntity, destroyedWith);
         this.decreaseEggs(level, pos, state);
     }
 
     @Override
-    protected boolean canBeReplaced(final BlockState state, final BlockPlaceContext context) {
-        return !context.isSecondaryUseActive() && context.getItemInHand().is(this.asItem()) && state.getValue(EGGS) < 4 ? true : super.canBeReplaced(state, context);
+    protected boolean canBeReplaced(final @NonNull BlockState state, final BlockPlaceContext context) {
+        return !context.isSecondaryUseActive() && context.getItemInHand().is(this.asItem()) && state.getValue(EGGS) < 4 || super.canBeReplaced(state, context);
     }
 
     @Nullable
     @Override
     public BlockState getStateForPlacement(final BlockPlaceContext context) {
         BlockState state = context.getLevel().getBlockState(context.getClickedPos());
-        return state.is(this) ? state.setValue(EGGS, Math.min(4, (Integer)state.getValue(EGGS) + 1)) : super.getStateForPlacement(context);
+        return state.is(this) ? state.setValue(EGGS, Math.min(4, state.getValue(EGGS) + 1)) : super.getStateForPlacement(context);
     }
 
     @Override
-    protected VoxelShape getShape(final BlockState state, final BlockGetter level, final BlockPos pos, final CollisionContext context) {
+    protected @NonNull VoxelShape getShape(final BlockState state, final @NonNull BlockGetter level, final @NonNull BlockPos pos, final @NonNull CollisionContext context) {
         return state.getValue(EGGS) == 1 ? SHAPE_SINGLE : SHAPE_MULTIPLE;
     }
 
@@ -166,7 +164,7 @@ public class CassowaryEggBlock extends Block {
         if (entity instanceof Cassowary || entity instanceof Bat) {
             return false;
         } else {
-            return !(entity instanceof LivingEntity) ? false : entity instanceof Player || level.getGameRules().get(GameRules.MOB_GRIEFING);
+            return entity instanceof LivingEntity && (entity instanceof Player || level.getGameRules().get(GameRules.MOB_GRIEFING));
         }
     }
 }
