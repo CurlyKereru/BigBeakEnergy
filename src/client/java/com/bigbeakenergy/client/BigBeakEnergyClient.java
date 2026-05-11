@@ -1,7 +1,7 @@
 package com.bigbeakenergy.client;
 
-import com.bigbeakenergy.entity.ModEntities;
 import com.bigbeakenergy.client.renderer.CassowaryRenderer;
+import com.bigbeakenergy.entity.ModEntities;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 

@@ -1,12 +1,12 @@
 package com.bigbeakenergy.client.model;
 
+import com.bigbeakenergy.client.renderer.CassowaryRenderState;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
 import net.minecraft.resources.Identifier;
-import com.bigbeakenergy.client.renderer.CassowaryRenderState;
 import net.minecraft.util.Mth;
 
 public class CassowaryModel extends EntityModel<CassowaryRenderState> {
@@ -58,7 +58,6 @@ public class CassowaryModel extends EntityModel<CassowaryRenderState> {
         float speed = state.walkAnimationSpeed;
         float position = state.walkAnimationPos;
 
-        // Legs
         RLeg.xRot = Mth.cos(position * 1.0F) * 0.8F * speed;
         LLeg.xRot = Mth.cos(position * 1.0F + Mth.PI) * 0.8F * speed;
         RLeg.z = Mth.cos(position * 1.0F) * 4.1F * speed;
@@ -66,19 +65,14 @@ public class CassowaryModel extends EntityModel<CassowaryRenderState> {
         RLeg.y = 5.5F - Math.max(0, Mth.sin(position * 1.0F)) * 3.5F * speed;
         LLeg.y = 5.5F - Math.max(0, Mth.sin(position * 1.0F + Mth.PI)) * 3.5F * speed;
 
-        // Body sway
         Body.y = 11.5F + Mth.sin(position * 1.0F) * 0.3F * speed;
         Body.zRot = Mth.sin(position * 1.0F) * 0.2F * speed;
 
-        // Neck bob
         Neck.xRot = Mth.sin(position * 2.0F + Mth.PI) * 0.3F * speed;
         Neck.zRot = Mth.sin(position * 1.0F+ Mth.PI) * 0.2F * speed;
 
-        // Head bob
         Head.z = -2.0F + Math.max(0, Mth.cos(position * 2.0F + Mth.PI) * 3.9F * speed);
         Head.y = -3.0F - Math.max(0, Mth.sin(position * 2.0F + Mth.PI)) * 0.75F * speed;
-
-        // Head look — blend with bob by adding to xRot instead of overwriting
         Head.yRot = state.yRot * (Mth.PI / 180F);
         Head.xRot += state.xRot * (Mth.PI / 180F);
     }

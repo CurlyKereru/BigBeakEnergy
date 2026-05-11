@@ -1,16 +1,16 @@
 package com.bigbeakenergy;
 
+import com.bigbeakenergy.entity.ModEntities;
 import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SpawnEggItem;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.component.TypedEntityData;
-import net.minecraft.nbt.CompoundTag;
-import com.bigbeakenergy.entity.ModEntities;
 
 public class ModItemsRegistry {
 

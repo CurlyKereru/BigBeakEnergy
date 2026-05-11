@@ -1,9 +1,9 @@
 package com.bigbeakenergy;
 
+import com.bigbeakenergy.entity.ModEntities;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.bigbeakenergy.entity.ModEntities;
 
 public class BigBeakEnergy implements ModInitializer {
 	public static final String MOD_ID = "bigbeakenergy";

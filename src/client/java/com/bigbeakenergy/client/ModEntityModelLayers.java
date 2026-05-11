@@ -1,7 +1,7 @@
 package com.bigbeakenergy.client;
 
-import com.bigbeakenergy.client.model.CassowaryModel;
 import com.bigbeakenergy.client.model.CassowaryBabyModel;
+import com.bigbeakenergy.client.model.CassowaryModel;
 import net.fabricmc.fabric.api.client.rendering.v1.ModelLayerRegistry;
 
 public class ModEntityModelLayers {

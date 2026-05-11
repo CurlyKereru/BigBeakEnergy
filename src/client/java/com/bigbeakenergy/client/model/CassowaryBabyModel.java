@@ -34,12 +34,10 @@ public class CassowaryBabyModel extends CassowaryModel {
                 CubeListBuilder.create().texOffs(0, 0).addBox(-2.0F, -2.0F, -2.5F, 4.0F, 4.0F, 5.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 19.0F, 0.5F));
 
-        // Stub neck — no cubes, just exists so super() can find it
         PartDefinition Neck = Body.addOrReplaceChild("Neck",
                 CubeListBuilder.create(),
                 PartPose.offset(0.0F, -1.0F, -2.5F));
 
-        // Head is child of Neck, not Body
         PartDefinition Head = Neck.addOrReplaceChild("Head",
                 CubeListBuilder.create().texOffs(0, 9).addBox(-1.0F, -3.0F, -2.0F, 2.0F, 4.0F, 2.0F, new CubeDeformation(0.0F))
                         .texOffs(8, 9).addBox(-1.0F, -2.0F, -3.0F, 2.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)),
@@ -61,7 +59,6 @@ public class CassowaryBabyModel extends CassowaryModel {
         float speed = state.walkAnimationSpeed;
         float position = state.walkAnimationPos;
 
-        // Reset body to baby position instead of adult's 11.5F
         Body.y = 19.0F + Mth.sin(position * 1.0F) * 0.3F * speed;
         Body.zRot = Mth.sin(position * 1.0F) * 0.2F * speed;
 
@@ -71,10 +68,9 @@ public class CassowaryBabyModel extends CassowaryModel {
         LLeg.z = Mth.cos(position * 1.3F + Mth.PI) * 1.5F * speed;
         RLeg.y = 2.0F - Math.max(0, Mth.sin(position * 1.3F)) * 1.5F * speed;
         LLeg.y = 2.0F - Math.max(0, Mth.sin(position * 1.3F + Mth.PI)) * 1.5F * speed;
+
         Head.z = Math.max(0, Mth.cos(position * 1.5F + Mth.PI) * 1.9F * speed);
         Head.y = Math.max(0, Mth.sin(position * 1.5F + Mth.PI)) * 0.4F * speed;
-
-
         Head.yRot = state.yRot * (Mth.PI / 180F);
         Head.xRot = state.xRot * (Mth.PI / 180F);
     }

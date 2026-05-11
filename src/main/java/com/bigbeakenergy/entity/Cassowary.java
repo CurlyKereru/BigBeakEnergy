@@ -2,6 +2,7 @@ package com.bigbeakenergy.entity;
 
 import com.bigbeakenergy.ModBlocksRegistry;
 import com.bigbeakenergy.ModItemsRegistry;
+import com.bigbeakenergy.block.CassowaryEggBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -14,22 +15,21 @@ import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.ResetUniversalAngerTargetGoal;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import com.bigbeakenergy.block.CassowaryEggBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.storage.ValueInput;
@@ -51,7 +51,6 @@ public class Cassowary extends Animal implements NeutralMob {
         super(entityType, level);
     }
 
-    // --- Synched data ---
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
@@ -77,8 +76,6 @@ public class Cassowary extends Animal implements NeutralMob {
         this.entityData.set(LAYING_EGG, value);
     }
 
-    // --- Save/load ---
-
     @Override
     protected void addAdditionalSaveData(ValueOutput output) {
         super.addAdditionalSaveData(output);
@@ -91,14 +88,14 @@ public class Cassowary extends Animal implements NeutralMob {
         this.setHasEgg(input.getBooleanOr("has_egg", false));
     }
 
-    // --- Breeding ---
+    // Breeding
 
     @Override
     public boolean canFallInLove() {
         return super.canFallInLove() && !this.hasEgg();
     }
 
-    // --- Goals ---
+    // Goals
 
     @Override
     protected void registerGoals() {
@@ -117,7 +114,7 @@ public class Cassowary extends Animal implements NeutralMob {
         this.targetSelector.addGoal(4, new ResetUniversalAngerTargetGoal<>(this, false));
     }
 
-    // --- Attributes ---
+    // Attributes
 
     public static AttributeSupplier.Builder createAttributes() {
         return Animal.createLivingAttributes()
@@ -128,7 +125,7 @@ public class Cassowary extends Animal implements NeutralMob {
                 .add(Attributes.ATTACK_DAMAGE, 6.0);
     }
 
-    // --- Anger (NeutralMob) ---
+    // Neutral AI
 
     private long persistentAngerEndTime;
     private EntityReference<LivingEntity> persistentAngerTarget;
@@ -140,13 +137,13 @@ public class Cassowary extends Animal implements NeutralMob {
     @Override public void setPersistentAngerTarget(@org.jspecify.annotations.Nullable EntityReference<LivingEntity> target) { this.persistentAngerTarget = target; }
     @Override @org.jspecify.annotations.Nullable public EntityReference<LivingEntity> getPersistentAngerTarget() { return this.persistentAngerTarget; }
 
-    // --- Offspring ---
+    // Offspring
 
     @Override
     public @Nullable Cassowary getBreedOffspring(ServerLevel level, AgeableMob partner) {
         return ModEntities.CASSOWARY.create(level, EntitySpawnReason.BREEDING);
     }
-    // --- Spawn ---
+    // Spawn
 
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
@@ -165,7 +162,7 @@ public class Cassowary extends Animal implements NeutralMob {
         return spawnData;
     }
 
-    // --- Loot ---
+    // Loot (Replace with loot table?)
 
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean recentlyHit) {
@@ -185,9 +182,9 @@ public class Cassowary extends Animal implements NeutralMob {
         return new ItemStack(ModItemsRegistry.CASSOWARY_SPAWN_EGG);
     }
 
-    // =========================================================
+
     // Inner goal classes
-    // =========================================================
+
 
     private class CassowaryBreedGoal extends BreedGoal {
         private final Cassowary cassowary;
@@ -212,9 +209,6 @@ public class Cassowary extends Animal implements NeutralMob {
         }
     }
 
-    /***
-     * Seek out a grass block and lay a single egg on top of it.
-     */
     private class CassowaryLayEggGoal extends MoveToBlockGoal {
         private final Cassowary cassowary;
 
@@ -269,9 +263,6 @@ public class Cassowary extends Animal implements NeutralMob {
             }
         }
 
-        /**
-         * Valid nest site: grass block with empty space above for the egg.
-         */
         @Override
         protected boolean isValidTarget(LevelReader level, BlockPos pos) {
             return level.getBlockState(pos).is(Blocks.GRASS_BLOCK)
@@ -293,7 +284,7 @@ public class Cassowary extends Animal implements NeutralMob {
     }
 
 
-    // --- Aggression goals ---
+    // Aggression Goals
 
     private class CassowaryAttackPlayersGoal extends NearestAttackableTargetGoal<Player> {
         public CassowaryAttackPlayersGoal() {

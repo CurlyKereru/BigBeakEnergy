@@ -6,8 +6,8 @@ import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.SpawnPlacements;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 public class ModEntitySpawn {
     public static void initialize() {
