@@ -1,0 +1,22 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:jungle",
+    {
+      "id": "biomesoplenty:rainforest",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:rocky_rainforest",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:tropics",
+      "required": false
+    },
+    {
+      "id": "clifftree:tropical_beach",
+      "required": false
+    }
+  ]
+}

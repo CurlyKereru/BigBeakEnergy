@@ -1,31 +1,31 @@
 {
 	"schemaVersion": 1,
-	"id": "modid",
-	"version": "${version}",
-	"name": "Example Mod",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"id": "bigbeakenergy",
+	"version": "0.1.0",
+	"name": "Big Beak Energy",
+	"description": "Adds birds found in Australia and New Zealand",
 	"authors": [
-		"Me!"
+		"CurlyKereru"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/modid/icon.png",
+	"icon": "assets/bigbeakenergy/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.example.ExampleMod"
+			"com.bigbeakenergy.BigBeakEnergy"
 		],
 		"client": [
-			"com.example.client.ExampleModClient"
+			"com.bigbeakenergy.client.BigBeakEnergyClient"
 		]
 	},
 	"mixins": [
-		"modid.mixins.json",
+		"bigbeakenergy.mixins.json",
 		{
-			"config": "modid.client.mixins.json",
+			"config": "bigbeakenergy.client.mixins.json",
 			"environment": "client"
 		}
 	],

@@ -1,0 +1,6 @@
+{
+  "parent": "bigbeakenergy:block/template_two_cassowary_eggs",
+  "textures": {
+    "all": "bigbeakenergy:block/cassowary_egg"
+  }
+}
