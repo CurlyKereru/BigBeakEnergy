@@ -17,7 +17,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.util.TimeUtil;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -156,7 +155,8 @@ public class Cassowary extends Animal implements NeutralMob {
                                         @NonNull EntitySpawnReason reason, @Nullable SpawnGroupData spawnData) {
         spawnData = super.finalizeSpawn(level, difficulty, reason, spawnData);
         int chicks = (reason == EntitySpawnReason.NATURAL || reason == EntitySpawnReason.CHUNK_GENERATION)
-                && random.nextInt(3) == 0 ? random.nextInt(3) + 1 : 0;
+                ? (random.nextInt(3) == 0 ? random.nextInt(3) + 1 : 0)
+                : 0;
         for (int i = 0; i < chicks; i++) {
             Cassowary chick = ModEntities.CASSOWARY.create(level.getLevel(), EntitySpawnReason.JOCKEY);
             if (chick != null) {
@@ -166,17 +166,6 @@ public class Cassowary extends Animal implements NeutralMob {
             }
         }
         return spawnData;
-    }
-
-    // Loot (Replace with loot table?)
-
-    @Override
-    protected void dropCustomDeathLoot(@NonNull ServerLevel level, @NonNull DamageSource source, boolean recentlyHit) {
-        super.dropCustomDeathLoot(level, source, recentlyHit);
-        int feathers = random.nextInt(4);
-        if (feathers > 0) {
-            spawnAtLocation(level, new ItemStack(Items.FEATHER, feathers));
-        }
     }
 
     public boolean isFood(ItemStack stack) {
