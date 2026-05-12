@@ -18,6 +18,12 @@ public class ModEntities {
                     .sized(0.8f, 1.3f)
     );
 
+    public static final EntityType<Gull> GULL = register(
+            "gull",
+            EntityType.Builder.<Gull>of(Gull::new, MobCategory.CREATURE)
+                    .sized(0.4f, 0.5f)
+    );
+
     private static <T extends net.minecraft.world.entity.Entity> EntityType<T> register(
             String name, EntityType.Builder<T> builder) {
         ResourceKey<EntityType<?>> key = ResourceKey.create(
@@ -26,10 +32,10 @@ public class ModEntities {
         return Registry.register(BuiltInRegistries.ENTITY_TYPE, key, builder.build(key));
     }
 
-
     public static void initialize() {}
 
     public static void registerAttributes() {
         FabricDefaultAttributeRegistry.register(CASSOWARY, Cassowary.createAttributes());
+        FabricDefaultAttributeRegistry.register(GULL, Gull.createAttributes());
     }
 }
