@@ -21,7 +21,7 @@ public class ModEntities {
     public static final EntityType<Gull> GULL = register(
             "gull",
             EntityType.Builder.<Gull>of(Gull::new, MobCategory.CREATURE)
-                    .sized(0.4f, 0.5f)
+                    .sized(0.45f, 0.55f)
     );
 
     private static <T extends net.minecraft.world.entity.Entity> EntityType<T> register(

@@ -62,15 +62,6 @@ public class GullModel extends EntityModel<GullRenderState> {
         float speed = state.walkAnimationSpeed;
         float position = state.walkAnimationPos;
 
-        rLeg.z = Mth.cos(position * 1.3F) * 1.5F * speed;
-        lLeg.z = Mth.cos(position * 1.3F + Mth.PI) * 1.5F * speed;
-        float walkXRot = Mth.cos(position * 1.3F) * 0.65F * speed;
-        float walkXRotL = Mth.cos(position * 1.3F + Mth.PI) * 0.65F * speed;
-        float flyXRot = 75.0F * (Mth.PI / 180F);
-        rLeg.xRot = Mth.lerp(state.flapSpeed, walkXRot, flyXRot);
-        lLeg.xRot = Mth.lerp(state.flapSpeed, walkXRotL, flyXRot);
-
-
         float flapAngle = state.flapAngle;
         float flapOffset = (flapAngle - 1.0F) * 0.55F;
         boolean activeWings = state.isFlying && !state.isSwimming;
@@ -87,6 +78,7 @@ public class GullModel extends EntityModel<GullRenderState> {
         if (activeWings) {
             lWing.y += (flapAngle - 1.0F) * 0.5F;
             rWing.y += (flapAngle - 1.0F) * 0.5F;
+            body.y += (flapAngle - 1.0F) * -0.3F;
         }
 
         head.yRot = state.yRot * (Mth.PI / 180F);
@@ -100,5 +92,15 @@ public class GullModel extends EntityModel<GullRenderState> {
             head.xRot += Mth.lerp(state.flapSpeed, 0.0F, 15.0F * (Mth.PI / 180F));
         }
         tail.xRot = Mth.lerp(state.flapSpeed, 0.0F, 0.2F);
+
+        if (!activeWings) {
+            rLeg.z = Mth.cos(position * 1.3F) * 1.5F * speed;
+            lLeg.z = Mth.cos(position * 1.3F + Mth.PI) * 1.5F * speed;
+        }
+        float walkXRot = Mth.cos(position * 1.3F) * 0.65F * speed;
+        float walkXRotL = Mth.cos(position * 1.3F + Mth.PI) * 0.65F * speed;
+        float flyXRot = 75.0F * (Mth.PI / 180F);
+        rLeg.xRot = Mth.lerp(state.flapSpeed, walkXRot, flyXRot);
+        lLeg.xRot = Mth.lerp(state.flapSpeed, walkXRotL, flyXRot);
     }
 }
