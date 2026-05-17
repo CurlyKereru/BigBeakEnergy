@@ -3,6 +3,7 @@ package com.bigbeakenergy.entity;
 import com.bigbeakenergy.ModItemsRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
@@ -315,8 +316,8 @@ public class Gull extends Animal implements FlyingAnimal {
         boolean brightEnoughToSpawn = EntitySpawnReason.ignoresLightRequirements(reason) || Animal.isBrightEnoughToSpawn(level, pos);
         BlockState below = level.getBlockState(pos.below());
         return (below.is(Blocks.SAND) || below.is(Blocks.GRAVEL) || below.is(Blocks.STONE)
-                || below.is(Blocks.MUD) || below.is(Blocks.DIORITE) || below.is(Blocks.ANDESITE)
-                || below.is(Blocks.GRANITE) || below.is(BlockTags.ANIMALS_SPAWNABLE_ON))
+                || below.is(Blocks.DIORITE) || below.is(Blocks.ANDESITE)
+                || below.is(Blocks.GRANITE))
                 && brightEnoughToSpawn;
     }
 
@@ -333,6 +334,15 @@ public class Gull extends Animal implements FlyingAnimal {
             Gull.this.setHomePos(Gull.this.blockPosition());
             if (!player.getAbilities().instabuild) {
                 item.shrink(1);
+            }
+            if (Gull.this.level() instanceof ServerLevel serverLevel) {
+                serverLevel.sendParticles(
+                        ParticleTypes.HAPPY_VILLAGER,
+                        Gull.this.getX(),
+                        Gull.this.getY() + Gull.this.getBbHeight() / 2.0,
+                        Gull.this.getZ(),
+                        8, 0.4, 0.4, 0.4, 0.0
+                );
             }
             return InteractionResult.SUCCESS;
         }
@@ -376,7 +386,7 @@ public class Gull extends Animal implements FlyingAnimal {
     public float getWalkTargetValue(final BlockPos pos, final LevelReader level) {
         BlockState below = level.getBlockState(pos.below());
         if (below.is(Blocks.SAND) || below.is(Blocks.GRAVEL) || below.is(Blocks.STONE)
-                || below.is(Blocks.MUD) || below.is(Blocks.DIORITE) || below.is(Blocks.ANDESITE)
+                ||  below.is(Blocks.DIORITE) || below.is(Blocks.ANDESITE)
                 || below.is(Blocks.GRANITE)) {
             return 10.0F;
         }

@@ -3,9 +3,24 @@
   "values": [
     "minecraft:beach",
     "minecraft:stony_shore",
-    "minecraft:mangrove_swamp",
     {
       "id": "clifftree:tropical_beach",
+      "required": false
+    },
+    {
+      "id": "clifftree:diorite_shore",
+      "required": false
+    },
+    {
+      "id": "clifftree:granite_shore",
+      "required": false
+    },
+    {
+      "id": "clifftree:gravelly_beach",
+      "required": false
+    },
+    {
+      "id": "clifftree:kelp_forest",
       "required": false
     }
   ]
