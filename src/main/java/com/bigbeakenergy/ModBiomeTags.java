@@ -11,5 +11,9 @@ public class ModBiomeTags {
                 Registries.BIOME,
                 Identifier.fromNamespaceAndPath("bigbeakenergy", "spawns_cassowary")
         );
+        public static final TagKey<Biome> SPAWNS_GULL = TagKey.create(
+                Registries.BIOME,
+                Identifier.fromNamespaceAndPath("bigbeakenergy", "spawns_gull")
+        );
     }
 }

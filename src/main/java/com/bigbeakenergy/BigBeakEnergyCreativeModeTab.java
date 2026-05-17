@@ -26,6 +26,7 @@ public class BigBeakEnergyCreativeModeTab {
                     .displayItems((params, output) -> {
                         output.accept(ModBlocksRegistry.CASSOWARY_EGG_ITEM);
                         output.accept(ModItemsRegistry.CASSOWARY_SPAWN_EGG);
+                        output.accept(ModItemsRegistry.GULL_SPAWN_EGG);
                     })
                     .build()
     );

@@ -28,5 +28,19 @@ public class ModItemsRegistry {
                             TypedEntityData.of(ModEntities.CASSOWARY, new CompoundTag())))
     );
 
+    public static final ResourceKey<Item> GULL_SPAWN_EGG_KEY = ResourceKey.create(
+            Registries.ITEM,
+            Identifier.fromNamespaceAndPath("bigbeakenergy", "gull_spawn_egg")
+    );
+
+    public static final SpawnEggItem GULL_SPAWN_EGG = Registry.register(
+            BuiltInRegistries.ITEM,
+            GULL_SPAWN_EGG_KEY,
+            new SpawnEggItem(new Item.Properties()
+                    .setId(GULL_SPAWN_EGG_KEY)
+                    .component(DataComponents.ENTITY_DATA,
+                            TypedEntityData.of(ModEntities.GULL, new CompoundTag())))
+    );
+
     public static void initialize() {}
 }
