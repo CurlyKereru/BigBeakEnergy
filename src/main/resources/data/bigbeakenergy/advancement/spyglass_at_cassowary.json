@@ -1,0 +1,44 @@
+{
+  "parent": "bigbeakenergy:root",
+  "criteria": {
+    "spyglass_at_cassowary": {
+      "conditions": {
+        "item": {
+          "items": "minecraft:spyglass"
+        },
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "type_specific": {
+                "type": "minecraft:player",
+                "looking_at": {
+                  "type": "bigbeakenergy:cassowary"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "trigger": "minecraft:using_item"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.adventure.spyglass_at_cassowary.description"
+    },
+    "icon": {
+      "id": "bigbeakenergy:cassowary_spawn_egg"
+    },
+    "title": {
+      "translate": "advancements.adventure.spyglass_at_cassowary.title"
+    }
+  },
+  "requirements": [
+    [
+      "spyglass_at_cassowary"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

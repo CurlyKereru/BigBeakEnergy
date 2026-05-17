@@ -1,0 +1,44 @@
+{
+  "parent": "bigbeakenergy:root",
+  "criteria": {
+    "spyglass_at_gull": {
+      "conditions": {
+        "item": {
+          "items": "minecraft:spyglass"
+        },
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "type_specific": {
+                "type": "minecraft:player",
+                "looking_at": {
+                  "type": "bigbeakenergy:gull"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "trigger": "minecraft:using_item"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.adventure.spyglass_at_gull.description"
+    },
+    "icon": {
+      "id": "bigbeakenergy:gull_spawn_egg"
+    },
+    "title": {
+      "translate": "advancements.adventure.spyglass_at_gull.title"
+    }
+  },
+  "requirements": [
+    [
+      "spyglass_at_gull"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

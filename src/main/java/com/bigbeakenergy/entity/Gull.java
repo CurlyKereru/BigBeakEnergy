@@ -6,7 +6,6 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
@@ -407,7 +406,7 @@ public class Gull extends Animal implements FlyingAnimal {
 
         @Override
         public boolean canUse() {
-            boolean inWaterTooLong = Gull.this.ticksInWater >= 6000
+            boolean inWaterTooLong = Gull.this.ticksInWater >= 3000
                     && Gull.this.getRandom().nextInt(reducedTickDelay(200)) == 0;
             boolean tooFarFromHome = !Gull.this.homePos.closerToCenterThan(Gull.this.position(), 64.0)
                     && Gull.this.getRandom().nextInt(reducedTickDelay(200)) == 0;
