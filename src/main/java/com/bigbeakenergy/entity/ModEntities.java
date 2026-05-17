@@ -14,13 +14,13 @@ public class ModEntities {
 
     public static final EntityType<Cassowary> CASSOWARY = register(
             "cassowary",
-            EntityType.Builder.<Cassowary>of(Cassowary::new, MobCategory.CREATURE)
+            EntityType.Builder.of(Cassowary::new, MobCategory.CREATURE)
                     .sized(0.8f, 1.3f)
     );
 
     public static final EntityType<Gull> GULL = register(
             "gull",
-            EntityType.Builder.<Gull>of(Gull::new, MobCategory.CREATURE)
+            EntityType.Builder.of(Gull::new, MobCategory.CREATURE)
                     .sized(0.45f, 0.55f)
     );
 

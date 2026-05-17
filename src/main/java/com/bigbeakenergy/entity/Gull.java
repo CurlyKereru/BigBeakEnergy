@@ -45,10 +45,36 @@ import java.util.function.Predicate;
 
 public class Gull extends Animal implements FlyingAnimal {
 
+    // --- Constants ---
+
+    private static final int TICKS_IN_WATER_BEFORE_HOME = 3000;
+    private static final double HOME_TRIGGER_DISTANCE = 64.0;
+    private static final double HOME_ARRIVAL_DISTANCE = 7.0;
+
+    // --- Item filter ---
+
     public static final Predicate<ItemEntity> ALLOWED_ITEMS = e ->
             !e.hasPickUpDelay() &&
                     e.isAlive() &&
                     e.getItem().get(DataComponents.FOOD) != null;
+
+    // --- Animation fields ---
+
+    public float flap;
+    public float flapSpeed;
+    public float oFlapSpeed;
+    public float oFlap;
+
+    // --- Private fields ---
+
+    private float flapping = 1.0F;
+    private float nextFlap = 1.0F;
+    private BlockPos homePos = BlockPos.ZERO;
+    private boolean goingHome;
+    private int ticksInWater = 0;
+
+    // --- Constructor ---
+
     public Gull(EntityType<? extends Animal> type, Level level) {
         super(type, level);
         this.moveControl = new FlyingMoveControl(this, 10, false);
@@ -56,36 +82,8 @@ public class Gull extends Animal implements FlyingAnimal {
         this.setPathfindingMalus(PathType.FIRE, -1.0F);
     }
 
-    public float flap;
-    public float flapSpeed;
-    public float oFlapSpeed;
-    public float oFlap;
-    private float flapping = 1.0F;
-    private float nextFlap = 1.0F;
+    // --- Attributes ---
 
-    private BlockPos homePos = BlockPos.ZERO;
-    private boolean goingHome;
-    public void setHomePos(final BlockPos pos) {
-        this.homePos = pos;
-    }
-    private int ticksInWater = 0;
-
-    @Override
-    public boolean isFood(@NonNull ItemStack itemStack) {
-        return false;
-    }
-
-    @Override
-    public boolean canMate(final @NonNull Animal partner) {
-        return false;
-    }
-
-    @Override
-    public @Nullable AgeableMob getBreedOffspring(@NonNull ServerLevel level, @NonNull AgeableMob partner) {
-        return null;
-    }
-
-    // Attributes
     public static AttributeSupplier.Builder createAttributes() {
         return Animal.createLivingAttributes()
                 .add(Attributes.MAX_HEALTH, 5.0)
@@ -96,44 +94,59 @@ public class Gull extends Animal implements FlyingAnimal {
                 .add(Attributes.ATTACK_DAMAGE, 1.0);
     }
 
+    // --- Breeding (disabled) ---
+
+    @Override
+    public boolean isFood(@NonNull ItemStack itemStack) {
+        return false;
+    }
+
+    @Override
+    public boolean canMate(@NonNull Animal partner) {
+        return false;
+    }
+
+    @Override
+    public @Nullable AgeableMob getBreedOffspring(@NonNull ServerLevel level, @NonNull AgeableMob partner) {
+        return null;
+    }
+
     @Override
     public boolean isBaby() {
         return false;
     }
 
-    // Goals
+    // --- Goals ---
 
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(1, new GullPanicGoal(this, 2.0));
+        this.goalSelector.addGoal(1, new GullPanicGoal(2.0));
         this.goalSelector.addGoal(2, new GullPlayWithItemsGoal());
         this.goalSelector.addGoal(3, new GullChaseDolphinGoal());
-        this.goalSelector.addGoal(4, new GullGoToWaterGoal(this, 1.0));
-        this.goalSelector.addGoal(5, new GullGoHomeGoal(this, 1.0));
+        this.goalSelector.addGoal(4, new GullGoToWaterGoal(1.0));
+        this.goalSelector.addGoal(5, new GullGoHomeGoal(1.0));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(7, new GullWanderGoal(this, 1.0));
     }
 
-    // Movement?
+    // --- Navigation ---
 
     @Override
-    protected @NonNull PathNavigation createNavigation(final @NonNull Level level) {
-        FlyingPathNavigation flyingPathNavigation = new FlyingPathNavigation(this, level);
-        flyingPathNavigation.setCanOpenDoors(false);
-        flyingPathNavigation.setCanFloat(true);
-        return flyingPathNavigation;
+    protected @NonNull PathNavigation createNavigation(@NonNull Level level) {
+        FlyingPathNavigation nav = new FlyingPathNavigation(this, level);
+        nav.setCanOpenDoors(false);
+        nav.setCanFloat(true);
+        return nav;
     }
+
+    // --- Movement and animation ---
 
     @Override
     public void aiStep() {
         super.aiStep();
         this.calculateFlapping();
-        if (this.isInWater()) {
-            this.ticksInWater++;
-        } else {
-            this.ticksInWater = 0;
-        }
+        this.ticksInWater = this.isInWater() ? this.ticksInWater + 1 : 0;
     }
 
     private void calculateFlapping() {
@@ -144,13 +157,11 @@ public class Gull extends Animal implements FlyingAnimal {
         if (!this.onGround() && this.flapping < 1.0F) {
             this.flapping = 1.0F;
         }
-
         this.flapping *= 0.9F;
         Vec3 movement = this.getDeltaMovement();
         if (!this.onGround() && movement.y < 0.0) {
             this.setDeltaMovement(movement.multiply(1.0, 0.6, 1.0));
         }
-
         this.flap = this.flap + this.flapping * 0.75F;
     }
 
@@ -160,7 +171,7 @@ public class Gull extends Animal implements FlyingAnimal {
     }
 
     @Override
-    protected void playStepSound(final @NonNull BlockPos pos, final @NonNull BlockState blockState) {
+    protected void playStepSound(@NonNull BlockPos pos, @NonNull BlockState blockState) {
         this.playSound(SoundEvents.PARROT_STEP, 0.15F, 1.0F);
     }
 
@@ -175,92 +186,135 @@ public class Gull extends Animal implements FlyingAnimal {
         this.nextFlap = this.flyDist + this.flapSpeed / 2.0F;
     }
 
+    @Override
+    protected void checkFallDamage(double ya, boolean onGround, @NonNull BlockState onState, @NonNull BlockPos pos) {
+    }
+
+    // --- Walk target scoring ---
+
+    @Override
+    public float getWalkTargetValue(BlockPos pos, LevelReader level) {
+        BlockState below = level.getBlockState(pos.below());
+        if (isCoastalBlock(below)) {
+            return 10.0F;
+        }
+        return level.getPathfindingCostFromLightLevels(pos);
+    }
+
+    // --- Home position ---
+
+    public void setHomePos(BlockPos pos) {
+        this.homePos = pos;
+    }
+
+    // --- Spawn rules ---
+
+    @SuppressWarnings("unused")
+    public static boolean checkGullSpawnRules(EntityType<Gull> type, ServerLevelAccessor level, EntitySpawnReason reason, BlockPos pos, RandomSource random) {
+        boolean brightEnough = EntitySpawnReason.ignoresLightRequirements(reason) || Animal.isBrightEnoughToSpawn(level, pos);
+        return isCoastalBlock(level.getBlockState(pos.below())) && brightEnough;
+    }
+
+    private static boolean isCoastalBlock(BlockState state) {
+        return state.is(Blocks.SAND)
+                || state.is(Blocks.GRAVEL)
+                || state.is(Blocks.STONE)
+                || state.is(Blocks.DIORITE)
+                || state.is(Blocks.ANDESITE)
+                || state.is(Blocks.GRANITE);
+    }
+
+    // --- Interaction ---
+
+    @Override
+    public ItemStack getPickResult() {
+        return new ItemStack(ModItemsRegistry.GULL_SPAWN_EGG);
+    }
+
+    @Override
+    public @NonNull InteractionResult mobInteract(Player player, @NonNull InteractionHand hand) {
+        ItemStack item = player.getItemInHand(hand);
+
+        if (item.getItem() == Items.BAKED_POTATO) {
+            this.setHomePos(this.blockPosition());
+            if (!player.getAbilities().instabuild) {
+                item.shrink(1);
+            }
+            if (this.level() instanceof ServerLevel serverLevel) {
+                serverLevel.sendParticles(
+                        ParticleTypes.HAPPY_VILLAGER,
+                        this.getX(), this.getY() + this.getBbHeight() / 2.0, this.getZ(),
+                        8, 0.4, 0.4, 0.4, 0.0
+                );
+            }
+            return InteractionResult.SUCCESS;
+        }
+
+        if (item.getItem() == ModItemsRegistry.GULL_SPAWN_EGG && this.level() instanceof ServerLevel serverLevel) {
+            Gull gull = ModEntities.GULL.create(serverLevel, EntitySpawnReason.SPAWN_ITEM_USE);
+            if (gull != null) {
+                gull.snapTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), 0.0F);
+                serverLevel.addFreshEntity(gull);
+                if (!player.getAbilities().instabuild) {
+                    item.shrink(1);
+                }
+            }
+            return InteractionResult.SUCCESS;
+        }
+
+        return super.mobInteract(player, hand);
+    }
+
+    // --- Persistence ---
+
+    @Override
+    protected void addAdditionalSaveData(@NonNull ValueOutput output) {
+        super.addAdditionalSaveData(output);
+        output.store("home_pos", BlockPos.CODEC, this.homePos);
+    }
+
+    @Override
+    protected void readAdditionalSaveData(ValueInput input) {
+        this.setHomePos(input.read("home_pos", BlockPos.CODEC).orElse(this.blockPosition()));
+        super.readAdditionalSaveData(input);
+    }
+
+    @Override
+    public @Nullable SpawnGroupData finalizeSpawn(
+            @NonNull ServerLevelAccessor level, @NonNull DifficultyInstance difficulty,
+            @NonNull EntitySpawnReason spawnReason, @Nullable SpawnGroupData groupData) {
+        this.setHomePos(this.blockPosition());
+        return super.finalizeSpawn(level, difficulty, spawnReason, groupData);
+    }
+
+    // =========================================================================
+    // Inner goal classes
+    // =========================================================================
+
     private class GullWanderGoal extends WaterAvoidingRandomFlyingGoal {
-        public GullWanderGoal(final PathfinderMob mob, final double speedModifier) {
+
+        GullWanderGoal(PathfinderMob mob, double speedModifier) {
             super(mob, speedModifier);
         }
 
-        @Nullable
         @Override
-        protected Vec3 getPosition() {
-            if (Gull.this.goingHome) {
-                return null;
+        protected @Nullable Vec3 getPosition() {
+            if (Gull.this.goingHome) return null;
+            if (Gull.this.isInWater()) {
+                return LandRandomPos.getPos(Gull.this, 15, 15);
             }
-            if (this.mob.isInWater()) {
-                return LandRandomPos.getPos(this.mob, 15, 15);
-            }
-            return AirAndWaterRandomPos.getPos(this.mob, 8, 4, -2,
-                    this.mob.getViewVector(0.0F).x,
-                    this.mob.getViewVector(0.0F).z,
-                    (float)(Math.PI / 2));
-        }
-    }
-    @Override
-    protected void checkFallDamage(final double ya, final boolean onGround, final @NonNull BlockState onState, final @NonNull BlockPos pos) {
-    }
-
-    // Play with food
-    private class GullPlayWithItemsGoal extends Goal {
-        private int cooldown;
-
-        GullPlayWithItemsGoal() {
-            super();
-            this.setFlags(EnumSet.of(Goal.Flag.MOVE));
-        }
-
-        @Override
-        public boolean canUse() {
-            if (this.cooldown > Gull.this.tickCount) {
-                return false;
-            }
-            List<ItemEntity> items = Gull.this.level()
-                    .getEntitiesOfClass(ItemEntity.class, Gull.this.getBoundingBox().inflate(8.0, 8.0, 8.0), Gull.ALLOWED_ITEMS);
-            return !items.isEmpty();
-        }
-
-        @Override
-        public void start() {
-            List<ItemEntity> items = Gull.this.level()
-                    .getEntitiesOfClass(ItemEntity.class, Gull.this.getBoundingBox().inflate(8.0, 8.0, 8.0), Gull.ALLOWED_ITEMS);
-            if (!items.isEmpty()) {
-                Gull.this.getNavigation().moveTo(items.getFirst(), 1.2F);
-            }
-            this.cooldown = 0;
-        }
-
-        @Override
-        public void tick() {
-            List<ItemEntity> items = Gull.this.level()
-                    .getEntitiesOfClass(ItemEntity.class, Gull.this.getBoundingBox().inflate(8.0, 8.0, 8.0), Gull.ALLOWED_ITEMS);
-            if (!items.isEmpty()) {
-                ItemEntity target = items.getFirst();
-                Gull.this.getNavigation().moveTo(target, 1.2F);
-                if (Gull.this.distanceToSqr(target) < 0.6) {
-                    float angleOffset = (float)(Gull.this.getRandom().nextGaussian() * 0.5);
-                    float yRot = Gull.this.getYRot() * (float)(Math.PI / 180.0) + angleOffset;
-                    target.setDeltaMovement(
-                            -Mth.sin(yRot) * 0.12F,
-                            0.34F,
-                            Mth.cos(yRot) * 0.12F
-                    );
-                    target.hurtMarked = true;
-                    target.setPickUpDelay(10);
-                }
-            }
-        }
-
-        @Override
-        public void stop() {
-            this.cooldown = Gull.this.tickCount + Gull.this.random.nextInt(100);
+            return AirAndWaterRandomPos.getPos(Gull.this, 8, 4, -2,
+                    Gull.this.getViewVector(0.0F).x,
+                    Gull.this.getViewVector(0.0F).z,
+                    (float) (Math.PI / 2));
         }
     }
 
-    // Custom panic goal
     private class GullPanicGoal extends Goal {
-        private final double speed;
-        private boolean isRunning;
 
-        GullPanicGoal(Gull gull, double speed) {
+        private final double speed;
+
+        GullPanicGoal(double speed) {
             this.speed = speed;
             this.setFlags(EnumSet.of(Goal.Flag.MOVE));
         }
@@ -286,12 +340,6 @@ public class Gull extends Animal implements FlyingAnimal {
         @Override
         public void start() {
             this.findNewPosition();
-            this.isRunning = true;
-        }
-
-        @Override
-        public void stop() {
-            this.isRunning = false;
         }
 
         @Override
@@ -309,139 +357,155 @@ public class Gull extends Animal implements FlyingAnimal {
         }
     }
 
-    //Custom spawn rule
+    private class GullPlayWithItemsGoal extends Goal {
 
-    public static boolean checkGullSpawnRules(EntityType<Gull> type, ServerLevelAccessor level, EntitySpawnReason reason, BlockPos pos, RandomSource random) {
-        boolean brightEnoughToSpawn = EntitySpawnReason.ignoresLightRequirements(reason) || Animal.isBrightEnoughToSpawn(level, pos);
-        BlockState below = level.getBlockState(pos.below());
-        return (below.is(Blocks.SAND) || below.is(Blocks.GRAVEL) || below.is(Blocks.STONE)
-                || below.is(Blocks.DIORITE) || below.is(Blocks.ANDESITE)
-                || below.is(Blocks.GRANITE))
-                && brightEnoughToSpawn;
-    }
+        private static final int GIVE_UP_TICKS = 600; // 30 seconds
+        private int cooldown;
+        private int ticksSpentChasing;
 
-    //Spawn Egg Pick Block and rule override, also potato
-    @Override
-    public ItemStack getPickResult() {
-        return new ItemStack(ModItemsRegistry.GULL_SPAWN_EGG);
-    }
-
-    @Override
-    public @NonNull InteractionResult mobInteract(Player player, @NonNull InteractionHand hand) {
-        ItemStack item = player.getItemInHand(hand);
-        if (item.getItem() == Items.BAKED_POTATO) {
-            Gull.this.setHomePos(Gull.this.blockPosition());
-            if (!player.getAbilities().instabuild) {
-                item.shrink(1);
-            }
-            if (Gull.this.level() instanceof ServerLevel serverLevel) {
-                serverLevel.sendParticles(
-                        ParticleTypes.HAPPY_VILLAGER,
-                        Gull.this.getX(),
-                        Gull.this.getY() + Gull.this.getBbHeight() / 2.0,
-                        Gull.this.getZ(),
-                        8, 0.4, 0.4, 0.4, 0.0
-                );
-            }
-            return InteractionResult.SUCCESS;
+        GullPlayWithItemsGoal() {
+            this.setFlags(EnumSet.of(Goal.Flag.MOVE));
         }
-        if (item.getItem() == ModItemsRegistry.GULL_SPAWN_EGG && this.level() instanceof ServerLevel serverLevel) {
-            Gull gull = ModEntities.GULL.create(serverLevel, EntitySpawnReason.SPAWN_ITEM_USE);
-            if (gull != null) {
-                gull.snapTo(this.getX(), this.getY(), this.getZ(), this.getYRot(), 0.0F);
-                serverLevel.addFreshEntity(gull);
-                if (!player.getAbilities().instabuild) {
-                    item.shrink(1);
-                }
+
+        @Override
+        public boolean canUse() {
+            if (this.cooldown > Gull.this.tickCount) return false;
+            return !this.getNearbyItems().isEmpty();
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return this.ticksSpentChasing < GIVE_UP_TICKS && !this.getNearbyItems().isEmpty();
+        }
+
+        @Override
+        public void start() {
+            List<ItemEntity> items = this.getNearbyItems();
+            if (!items.isEmpty()) {
+                Gull.this.getNavigation().moveTo(items.getFirst(), 1.2F);
             }
-            return InteractionResult.SUCCESS;
+            this.cooldown = 0;
+            this.ticksSpentChasing = 0;
         }
-        return super.mobInteract(player, hand);
-    }
 
-    // Home AI
-    @Override
-    protected void addAdditionalSaveData(final @NonNull ValueOutput output) {
-        super.addAdditionalSaveData(output);
-        output.store("home_pos", BlockPos.CODEC, this.homePos);
-    }
+        @Override
+        public void tick() {
+            this.ticksSpentChasing++;
+            List<ItemEntity> items = this.getNearbyItems();
+            if (items.isEmpty()) return;
 
-    @Override
-    protected void readAdditionalSaveData(final ValueInput input) {
-        this.setHomePos((BlockPos)input.read("home_pos", BlockPos.CODEC).orElse(this.blockPosition()));
-        super.readAdditionalSaveData(input);
-    }
+            ItemEntity target = items.getFirst();
+            Gull.this.getNavigation().moveTo(target, 1.2F);
 
-    @Nullable
-    @Override
-    public SpawnGroupData finalizeSpawn(
-            final @NonNull ServerLevelAccessor level, final @NonNull DifficultyInstance difficulty, final @NonNull EntitySpawnReason spawnReason, @Nullable final SpawnGroupData groupData
-    ) {
-        this.setHomePos(this.blockPosition());
-        return super.finalizeSpawn(level, difficulty, spawnReason, groupData);
-    }
-
-    @Override
-    public float getWalkTargetValue(final BlockPos pos, final LevelReader level) {
-        BlockState below = level.getBlockState(pos.below());
-        if (below.is(Blocks.SAND) || below.is(Blocks.GRAVEL) || below.is(Blocks.STONE)
-                ||  below.is(Blocks.DIORITE) || below.is(Blocks.ANDESITE)
-                || below.is(Blocks.GRANITE)) {
-            return 10.0F;
+            if (Gull.this.distanceToSqr(target) < 0.6) {
+                float yRot = Gull.this.getYRot() * (float) (Math.PI / 180.0)
+                        + (float) (Gull.this.getRandom().nextGaussian() * 0.5);
+                target.setDeltaMovement(-Mth.sin(yRot) * 0.12F, 0.34F, Mth.cos(yRot) * 0.12F);
+                target.hurtMarked = true;
+                target.setPickUpDelay(10);
+            }
         }
-        return level.getPathfindingCostFromLightLevels(pos);
+
+        @Override
+        public void stop() {
+            this.cooldown = Gull.this.tickCount + Gull.this.random.nextInt(100);
+        }
+
+        private List<ItemEntity> getNearbyItems() {
+            return Gull.this.level().getEntitiesOfClass(
+                    ItemEntity.class,
+                    Gull.this.getBoundingBox().inflate(9.0, 3.0, 9.0),
+                    Gull.ALLOWED_ITEMS);
+        }
+    }
+
+    private class GullChaseDolphinGoal extends Goal {
+
+        private Dolphin target;
+
+        GullChaseDolphinGoal() {
+            this.setFlags(EnumSet.of(Goal.Flag.MOVE));
+        }
+
+        @Override
+        public boolean canUse() {
+            List<Dolphin> dolphins = Gull.this.level().getEntitiesOfClass(
+                    Dolphin.class,
+                    Gull.this.getBoundingBox().inflate(15.0, 4.0, 15.0));
+            this.target = dolphins.isEmpty() ? null : dolphins.getFirst();
+            return this.target != null;
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            if (this.target == null || !this.target.isAlive()) return false;
+            if (!this.target.closerThan(Gull.this, 15.0)) return false;
+            return !this.target.isUnderWater() || !(Gull.this.getY() - this.target.getY() > 4.0);
+        }
+
+        @Override
+        public void tick() {
+            Gull.this.getNavigation().moveTo(this.target, 1.4);
+        }
+
+        @Override
+        public void stop() {
+            this.target = null;
+            Gull.this.getNavigation().stop();
+        }
     }
 
     private class GullGoHomeGoal extends Goal {
-        private final Gull gull;
+
+        private static final int GIVE_UP_TICKS = 600;
+
         private final double speedModifier;
         private boolean stuck;
         private int closeToHomeTryTicks;
-        private static final int GIVE_UP_TICKS = 600;
 
-        GullGoHomeGoal(final Gull gull, final double speedModifier) {
-            this.gull = gull;
+        GullGoHomeGoal(double speedModifier) {
             this.speedModifier = speedModifier;
         }
 
         @Override
         public boolean canUse() {
-            boolean inWaterTooLong = Gull.this.ticksInWater >= 3000
+            boolean inWaterTooLong = Gull.this.ticksInWater >= TICKS_IN_WATER_BEFORE_HOME
                     && Gull.this.getRandom().nextInt(reducedTickDelay(200)) == 0;
-            boolean tooFarFromHome = !Gull.this.homePos.closerToCenterThan(Gull.this.position(), 64.0)
+            boolean tooFarFromHome = !Gull.this.homePos.closerToCenterThan(Gull.this.position(), HOME_TRIGGER_DISTANCE)
                     && Gull.this.getRandom().nextInt(reducedTickDelay(200)) == 0;
             return inWaterTooLong || tooFarFromHome;
         }
+
         @Override
         public void start() {
-            this.gull.goingHome = true;
+            Gull.this.goingHome = true;
             this.stuck = false;
             this.closeToHomeTryTicks = 0;
         }
 
         @Override
         public void stop() {
-            this.gull.goingHome = false;
+            Gull.this.goingHome = false;
         }
 
         @Override
         public boolean canContinueToUse() {
-            return !this.gull.homePos.closerToCenterThan(this.gull.position(), 7.0) && !this.stuck && this.closeToHomeTryTicks <= this.adjustedTickDelay(600);
+            return !Gull.this.homePos.closerToCenterThan(Gull.this.position(), HOME_ARRIVAL_DISTANCE)
+                    && !this.stuck
+                    && this.closeToHomeTryTicks <= this.adjustedTickDelay(GIVE_UP_TICKS);
         }
 
         @Override
         public void tick() {
-            BlockPos homePos = Gull.this.homePos;
-            boolean closeToHome = homePos.closerToCenterThan(Gull.this.position(), 16.0);
-            if (closeToHome) {
-                this.closeToHomeTryTicks++;
-            }
+            boolean closeToHome = Gull.this.homePos.closerToCenterThan(Gull.this.position(), 16.0);
+            if (closeToHome) this.closeToHomeTryTicks++;
 
             if (Gull.this.getNavigation().isDone()) {
-                Vec3 homePosVec = Vec3.atBottomCenterOf(homePos);
-                Vec3 homeDir = homePosVec.subtract(Gull.this.position()).normalize();
-                Vec3 nextPos = AirAndWaterRandomPos.getPos(Gull.this, 16, 4, -2, homeDir.x, homeDir.z, (float)(Math.PI / 4));
-
+                Vec3 homeDir = Vec3.atBottomCenterOf(Gull.this.homePos)
+                        .subtract(Gull.this.position())
+                        .normalize();
+                Vec3 nextPos = AirAndWaterRandomPos.getPos(Gull.this, 16, 4, -2,
+                        homeDir.x, homeDir.z, (float) (Math.PI / 4));
                 if (nextPos == null) {
                     this.stuck = true;
                     return;
@@ -450,10 +514,12 @@ public class Gull extends Animal implements FlyingAnimal {
             }
         }
     }
+
     private class GullGoToWaterGoal extends MoveToBlockGoal {
+
         private static final int GIVE_UP_TICKS = 1200;
 
-        GullGoToWaterGoal(Gull gull, double speedModifier) {
+        GullGoToWaterGoal(double speedModifier) {
             super(Gull.this, speedModifier, 32, 6);
             this.verticalSearchStart = -1;
         }
@@ -468,7 +534,7 @@ public class Gull extends Animal implements FlyingAnimal {
 
         @Override
         public boolean canContinueToUse() {
-            return this.tryTicks <= 1200 && this.isValidTarget(Gull.this.level(), this.blockPos);
+            return this.tryTicks <= GIVE_UP_TICKS && this.isValidTarget(Gull.this.level(), this.blockPos);
         }
 
         @Override
@@ -477,47 +543,8 @@ public class Gull extends Animal implements FlyingAnimal {
         }
 
         @Override
-        protected boolean isValidTarget(final LevelReader level, final @NonNull BlockPos pos) {
+        protected boolean isValidTarget(LevelReader level, @NonNull BlockPos pos) {
             return level.getBlockState(pos).is(Blocks.WATER);
         }
     }
-    // gulls chase dolphins
-    private class GullChaseDolphinGoal extends Goal {
-        private net.minecraft.world.entity.animal.dolphin.Dolphin target;
-
-        GullChaseDolphinGoal() {
-            this.setFlags(EnumSet.of(Goal.Flag.MOVE));
-        }
-
-        @Override
-        public boolean canUse() {
-            List<Dolphin> dolphins = Gull.this.level().getEntitiesOfClass(
-                    Dolphin.class,
-                    Gull.this.getBoundingBox().inflate(15.0, 4.0, 15.0)
-            );
-            this.target = dolphins.isEmpty() ? null : dolphins.getFirst();
-            return this.target != null;
-        }
-
-        @Override
-        public boolean canContinueToUse() {
-            if (this.target == null || !this.target.isAlive()) return false;
-            if (!this.target.closerThan(Gull.this, 15.0)) return false;
-            // give up if dolphin is more than 3 blocks below water surface
-            return !this.target.isUnderWater() ||
-                    !(Gull.this.getY() - this.target.getY() > 4.0);
-        }
-
-        @Override
-        public void tick() {
-            Gull.this.getNavigation().moveTo(this.target, 1.4);
-        }
-
-        @Override
-        public void stop() {
-            this.target = null;
-            Gull.this.getNavigation().stop();
-        }
-    }
 }
-
