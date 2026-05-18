@@ -19,5 +19,6 @@ public class BigBeakEnergy implements ModInitializer {
 		ModItemsRegistry.initialize();
 		ModBlocksRegistry.initialize();
 		BigBeakEnergyCreativeModeTab.initialize();
+		ModSounds.initialize();
 	}
 }

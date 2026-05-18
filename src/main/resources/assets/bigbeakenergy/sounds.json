@@ -1,0 +1,32 @@
+{
+  "gull_panic": {
+    "subtitle": "subtitles.bigbeakenergy.gull_panic",
+    "sounds": [
+      "bigbeakenergy:gull_panic"
+    ]
+  },
+  "gull_ambient_1": {
+    "subtitle": "subtitles.bigbeakenergy.gull_ambient_1",
+    "sounds": [
+      "bigbeakenergy:gull_ambient_1"
+    ]
+  },
+  "gull_ambient_2": {
+    "subtitle": "subtitles.bigbeakenergy.gull_ambient_2",
+    "sounds": [
+      "bigbeakenergy:gull_ambient_2"
+    ]
+  },
+  "gull_flap": {
+    "subtitle": "subtitles.bigbeakenergy.gull_flap",
+    "sounds": [
+      "minecraft:entity/parrot/fly"
+    ]
+  },
+  "gull_step": {
+    "subtitle": "subtitles.bigbeakenergy.gull_step",
+    "sounds": [
+      "minecraft:entity/parrot/step"
+    ]
+  }
+}

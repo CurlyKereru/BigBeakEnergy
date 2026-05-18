@@ -8,5 +8,10 @@
   "advancements.adventure.spyglass_at_cassowary.title": "The Most Dangerous Game",
   "advancements.adventure.spyglass_at_cassowary.description": "Look at a Cassowary through a spyglass.",
   "advancements.adventure.spyglass_at_gull.title": "Mine! Mine! Mine! Mine!",
-  "advancements.adventure.spyglass_at_gull.description": "Look at a Gull through a spyglass."
+  "advancements.adventure.spyglass_at_gull.description": "Look at a Gull through a spyglass.",
+  "subtitles.bigbeakenergy.gull_panic": "Gull shrieks",
+  "subtitles.bigbeakenergy.gull_ambient_1": "Gull squawks softly",
+  "subtitles.bigbeakenergy.gull_ambient_2": "Gull squawks",
+  "subtitles.bigbeakenergy.gull_flap": "Gull flaps",
+  "subtitles.bigbeakenergy.gull_step": "Gull waddles"
 }

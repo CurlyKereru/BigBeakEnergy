@@ -1,10 +1,12 @@
 package com.bigbeakenergy.entity;
 
 import com.bigbeakenergy.ModItemsRegistry;
+import com.bigbeakenergy.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -50,6 +52,10 @@ public class Gull extends Animal implements FlyingAnimal {
     private static final int TICKS_IN_WATER_BEFORE_HOME = 3000;
     private static final double HOME_TRIGGER_DISTANCE = 64.0;
     private static final double HOME_ARRIVAL_DISTANCE = 7.0;
+    private static final SoundEvent[] AMBIENT_SOUNDS = {
+            ModSounds.GULL_AMBIENT_1,
+            ModSounds.GULL_AMBIENT_2
+    };
 
     // --- Item filter ---
 
@@ -140,7 +146,12 @@ public class Gull extends Animal implements FlyingAnimal {
         return nav;
     }
 
-    // --- Movement and animation ---
+    // --- Movement, animation, and ambient sounds ---
+
+    @Override
+    protected SoundEvent getAmbientSound() {
+        return AMBIENT_SOUNDS[this.getRandom().nextInt(AMBIENT_SOUNDS.length)];
+    }
 
     @Override
     public void aiStep() {
@@ -172,7 +183,7 @@ public class Gull extends Animal implements FlyingAnimal {
 
     @Override
     protected void playStepSound(@NonNull BlockPos pos, @NonNull BlockState blockState) {
-        this.playSound(SoundEvents.PARROT_STEP, 0.15F, 1.0F);
+        this.playSound(ModSounds.GULL_STEP, 0.15F, 1.0F);
     }
 
     @Override
@@ -182,7 +193,7 @@ public class Gull extends Animal implements FlyingAnimal {
 
     @Override
     protected void onFlap() {
-        this.playSound(SoundEvents.PARROT_FLY, 0.15F, 1.0F);
+        this.playSound(ModSounds.GULL_FLAP, 0.15F, 1.0F);
         this.nextFlap = this.flyDist + this.flapSpeed / 2.0F;
     }
 
@@ -339,6 +350,9 @@ public class Gull extends Animal implements FlyingAnimal {
 
         @Override
         public void start() {
+            if (!Gull.this.level().isClientSide()) {
+                Gull.this.playSound(ModSounds.GULL_PANIC, 1.0F, Gull.this.getVoicePitch());
+            }
             this.findNewPosition();
         }
 
